@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 use std::collections::VecDeque;
 
 #[derive(Debug)]
@@ -8,31 +8,50 @@ pub enum CollisionPoint {
 	Top
 }
 
-pub fn paddle_collision(paddle: &Paddle, object: CoordinateVector) -> Option<CollisionPoint> {
-	if object + CoordinateVector(1,1) == *paddle.front().unwrap() {
+pub fn paddle_collision(paddle: &Paddle, object: Vector) -> Option<CollisionPoint> {
+	if object + Vector::new(1, 1) == *paddle.front().unwrap() {
 		Some(CollisionPoint::LeftCorner)
-	} else if object + CoordinateVector(-1,1) == *paddle.back().unwrap() {
+	} else if object + Vector::new(-1, 1) == *paddle.back().unwrap() {
 		Some(CollisionPoint::RightCorner)
-	} else if paddle.contains(&(object + CoordinateVector(0,1))) {
+	} else if paddle.contains(&(object + Vector::new(0, 1))) {
 		Some(CollisionPoint::Top)
 	} else {
 		None
 	}
 }
 
-pub fn move_paddle(paddle: &mut Paddle, direction: CoordinateVector) {
+pub fn move_paddle(paddle: &mut Paddle, direction: Vector) {
 	for segment in paddle.iter_mut() {
-		segment.0 += direction.0;
+		*segment += direction;
 	}
 }
 
-pub type Paddle = VecDeque<CoordinateVector>;
+pub type Paddle = VecDeque<Vector>;
 #[derive(Debug, PartialEq, Copy, Clone)]
-pub struct CoordinateVector(pub i32,pub i32);
-impl Add for CoordinateVector {
+pub struct Vector {
+	pub x: i32,
+	pub y: i32,
+}
+
+impl Vector {
+	pub fn new(x: i32, y: i32) -> Self {
+		Self { x,y }
+	}
+}
+
+impl Add for Vector {
 	type Output = Self;
 
-	fn add(self, rhs: Self) -> Self::Output {
-		CoordinateVector(self.0 + rhs.0, self.1 + rhs.1)
+	fn add(self, other: Self) -> Self::Output {
+		Vector::new(self.x + other.x, self.y + other.y)
+	}
+}
+
+impl AddAssign for Vector {
+	fn add_assign(&mut self, other: Self) {
+		*self = Self {
+			x: self.x + other.x,
+			y: self.y + other.y,
+		};
 	}
 }

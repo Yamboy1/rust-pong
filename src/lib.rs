@@ -2,22 +2,36 @@ use std::ops::{Add, AddAssign};
 use std::collections::VecDeque;
 
 #[derive(Debug)]
-pub enum CollisionPoint {
-	LeftCorner,
-	RightCorner,
-	Top
+pub struct Collision {
+	pub horizontal: bool,
+	pub vertical: bool,
 }
 
-pub fn paddle_collision(paddle: &Paddle, object: Vector) -> Option<CollisionPoint> {
-	if object + Vector::new(1, 1) == *paddle.front().unwrap() {
-		Some(CollisionPoint::LeftCorner)
-	} else if object + Vector::new(-1, 1) == *paddle.back().unwrap() {
-		Some(CollisionPoint::RightCorner)
-	} else if paddle.contains(&(object + Vector::new(0, 1))) {
-		Some(CollisionPoint::Top)
-	} else {
-		None
+impl Collision {
+	fn new(horizontal: bool, vertical: bool) -> Self {
+		Self { horizontal, vertical }
 	}
+}
+
+pub fn ball_collision(ball: Vector, ball_direction: Vector, paddle: &Paddle, bounds: Vector) -> Collision {
+	let mut collision: Collision = Collision::new(false, false);
+	let new_position = ball + ball_direction;
+
+	if ball_direction == Vector::new(1,1) && new_position == *paddle.front().unwrap() {
+		collision.horizontal = true;
+		collision.vertical = true;
+	} else if ball_direction == Vector::new(-1,1) && new_position == *paddle.back().unwrap() {
+		collision.horizontal = true;
+		collision.vertical = true;
+	}
+
+	if paddle.contains(&new_position) { collision.vertical = true; }
+	else if new_position.y <= 0 { collision.vertical = true; }
+
+	if new_position.x <= 0 { collision.horizontal = true; }
+	else if new_position.x >= bounds.x - 1 { collision.horizontal = true; }
+
+	collision
 }
 
 pub fn move_paddle(paddle: &mut Paddle, direction: Vector) {
